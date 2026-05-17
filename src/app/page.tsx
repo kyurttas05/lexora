@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
 const skills = [
   {
     name: "Kelime",
@@ -29,7 +32,7 @@ export default function Home() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950">
       <main className="w-full max-w-5xl px-6 py-16 sm:py-24">
-        <header className="mb-16 text-center">
+        <header className="mb-12 text-center">
           <h1 className="mb-4 text-5xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-6xl">
             Lexora
           </h1>
@@ -39,6 +42,15 @@ export default function Home() {
           <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-500">
             Cambridge ve IELTS müfredatına dayalı, AI destekli
           </p>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button asChild size="lg">
+              <Link href="/signup">Ücretsiz başla</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/login">Giriş yap</Link>
+            </Button>
+          </div>
         </header>
 
         <div className="grid gap-4 sm:grid-cols-2">
