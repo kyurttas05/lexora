@@ -25,9 +25,9 @@ export default function CheckEmailPage() {
           </p>
         </CardContent>
         <CardFooter className="justify-center">
-          <Button asChild variant="outline">
-            <Link href="/login">Giriş sayfasına dön</Link>
-          </Button>
+          <Link href="/login">
+            <Button variant="outline">Giriş sayfasına dön</Button>
+          </Link>
         </CardFooter>
       </Card>
     </div>

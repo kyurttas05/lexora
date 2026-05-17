@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "../login/actions";
@@ -19,6 +20,23 @@ export default async function DashboardPage() {
     .select("display_name, level, target_exam, daily_goal")
     .eq("id", user.id)
     .single();
+
+  // Bugünkü çalışma istatistiği
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const { count: reviewedToday } = await supabase
+    .from("user_word_progress")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .gte("last_reviewed_at", todayStart.toISOString());
+
+  // Vadesi gelen kelime sayısı
+  const { count: dueCount } = await supabase
+    .from("user_word_progress")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .lte("next_review_at", new Date().toISOString());
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
@@ -42,9 +60,13 @@ export default async function DashboardPage() {
         <h2 className="mb-2 text-3xl font-bold">
           Hoş geldin{profile?.display_name ? `, ${profile.display_name}` : ""} 👋
         </h2>
-        <p className="mb-8 text-zinc-600 dark:text-zinc-400">
+        <p className="mb-2 text-zinc-600 dark:text-zinc-400">
           Seviye: <strong>{profile?.level ?? "B2"}</strong> · Günlük hedef:{" "}
           <strong>{profile?.daily_goal ?? 20} kelime</strong>
+        </p>
+        <p className="mb-8 text-sm text-zinc-500 dark:text-zinc-500">
+          Bugün <strong>{reviewedToday ?? 0}</strong> kelime çalıştın ·{" "}
+          <strong>{dueCount ?? 0}</strong> tekrar bekliyor
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -54,7 +76,9 @@ export default async function DashboardPage() {
               <CardDescription>Aralıklı tekrar ile B2-C1 kelimeleri</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button disabled>Yakında — Kelime modülü geliştiriliyor</Button>
+              <Link href="/dashboard/vocab">
+                <Button>Çalışmaya başla →</Button>
+              </Link>
             </CardContent>
           </Card>
 

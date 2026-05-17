@@ -44,12 +44,12 @@ export default function Home() {
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button asChild size="lg">
-              <Link href="/signup">Ücretsiz başla</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/login">Giriş yap</Link>
-            </Button>
+            <Link href="/signup">
+              <Button size="lg">Ücretsiz başla</Button>
+            </Link>
+            <Link href="/login">
+              <Button size="lg" variant="outline">Giriş yap</Button>
+            </Link>
           </div>
         </header>
 
