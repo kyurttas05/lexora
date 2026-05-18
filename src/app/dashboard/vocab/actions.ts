@@ -16,12 +16,37 @@ export type ReviewWord = {
   example_en: string | null;
   example_tr: string | null;
   level: string | null;
-  // null = henüz progress yok (yeni kart)
   progress_id: string | null;
   ease: number;
   interval_days: number;
   repetitions: number;
   status: "new" | "learning" | "reviewing" | "mastered";
+};
+
+// Inner-join sonuçları için açık tip (Supabase JS'in tip inferansı zayıf burada)
+type WordRow = {
+  id: string;
+  word: string;
+  pos: string | null;
+  pronunciation: string | null;
+  meaning_en: string | null;
+  meaning_tr: string | null;
+  example_en: string | null;
+  example_tr: string | null;
+  level: string | null;
+};
+
+type ProgressRow = {
+  id: string;
+  ease_factor: number;
+  interval_days: number;
+  repetitions: number;
+  status: "new" | "learning" | "reviewing" | "mastered";
+  word: WordRow;
+};
+
+type DeckWordRow = {
+  word: WordRow;
 };
 
 /**
@@ -38,7 +63,6 @@ export async function getReviewQueue(): Promise<ReviewWord[]> {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Oturum yok");
 
-  // Daily goal
   const { data: profile } = await supabase
     .from("user_profiles")
     .select("daily_goal")
@@ -58,62 +82,41 @@ export async function getReviewQueue(): Promise<ReviewWord[]> {
     .eq("user_id", user.id)
     .lte("next_review_at", nowIso)
     .order("next_review_at", { ascending: true })
-    .limit(dailyGoal);
+    .limit(dailyGoal)
+    .returns<ProgressRow[]>();
 
-  const dueWords: ReviewWord[] = (dueRows ?? []).map((row) => {
-    // Supabase'in returned shape'i: word bir obje (inner join)
-    const w = row.word as unknown as {
-      id: string;
-      word: string;
-      pos: string | null;
-      pronunciation: string | null;
-      meaning_en: string | null;
-      meaning_tr: string | null;
-      example_en: string | null;
-      example_tr: string | null;
-      level: string | null;
-    };
-    return {
-      id: w.id,
-      word: w.word,
-      pos: w.pos,
-      pronunciation: w.pronunciation,
-      meaning_en: w.meaning_en,
-      meaning_tr: w.meaning_tr,
-      example_en: w.example_en,
-      example_tr: w.example_tr,
-      level: w.level,
-      progress_id: row.id,
-      ease: row.ease_factor,
-      interval_days: row.interval_days,
-      repetitions: row.repetitions,
-      status: row.status as ReviewWord["status"],
-    };
-  });
+  const dueWords: ReviewWord[] = (dueRows ?? []).map((row) => ({
+    id: row.word.id,
+    word: row.word.word,
+    pos: row.word.pos,
+    pronunciation: row.word.pronunciation,
+    meaning_en: row.word.meaning_en,
+    meaning_tr: row.word.meaning_tr,
+    example_en: row.word.example_en,
+    example_tr: row.word.example_tr,
+    level: row.word.level,
+    progress_id: row.id,
+    ease: row.ease_factor,
+    interval_days: row.interval_days,
+    repetitions: row.repetitions,
+    status: row.status,
+  }));
 
   // 2) Eksik kalan slotları yeni kelimelerle doldur
   const remaining = dailyGoal - dueWords.length;
   let newWords: ReviewWord[] = [];
 
   if (remaining > 0) {
-    // Kullanıcının daha önce hiç görmediği kelimeleri al (starter deck'ten)
-    const seenIds = dueWords.map((w) => w.id);
-
-    let query = supabase
+    const { data: deckRows } = await supabase
       .from("deck_words")
-      .select("word:words!inner(id, word, pos, pronunciation, meaning_en, meaning_tr, example_en, example_tr, level)")
+      .select(
+        "word:words!inner(id, word, pos, pronunciation, meaning_en, meaning_tr, example_en, example_tr, level)",
+      )
       .eq("deck_id", STARTER_DECK_ID)
       .order("position", { ascending: true })
-      .limit(remaining * 3); // fazla al, filtreden sonra remaining kadar kalsın
+      .limit(remaining * 3)
+      .returns<DeckWordRow[]>();
 
-    if (seenIds.length > 0) {
-      // Tekrar olarak gelmiş kelimeleri hariç tut
-      // (NOT-IN için query devamı altta)
-    }
-
-    const { data: deckRows } = await query;
-
-    // Şu anki user_word_progress'leri al, bunlardan olanları hariç tut
     const { data: existingProgress } = await supabase
       .from("user_word_progress")
       .select("word_id")
@@ -122,7 +125,7 @@ export async function getReviewQueue(): Promise<ReviewWord[]> {
     const existingIds = new Set((existingProgress ?? []).map((r) => r.word_id));
 
     newWords = (deckRows ?? [])
-      .map((row) => row.word as unknown as ReviewWord)
+      .map((row) => row.word)
       .filter((w) => !existingIds.has(w.id))
       .slice(0, remaining)
       .map((w) => ({
@@ -157,7 +160,6 @@ export async function submitReview(wordId: string, rating: ReviewRating) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Oturum yok");
 
-  // Mevcut progress'i bul (yoksa default state)
   const { data: existing } = await supabase
     .from("user_word_progress")
     .select("id, ease_factor, interval_days, repetitions, total_reviews, correct_count, wrong_count")
