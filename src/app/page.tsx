@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 
 const skills = [
@@ -6,79 +9,134 @@ const skills = [
     name: "Kelime",
     description: "Aralıklı tekrar ile B2-C1 seviyesi kelime ezberleme",
     emoji: "📚",
-    status: "Geliştiriliyor",
+    status: "Aktif",
+    accent: "primary" as const,
   },
   {
     name: "Okuma",
     description: "Cambridge tarzı pasajlar, AI destekli soru üretimi",
     emoji: "📖",
     status: "Yakında",
+    accent: "accent" as const,
   },
   {
     name: "Gramer",
     description: "CAE müfredatına göre yapısal alıştırmalar",
     emoji: "✍️",
     status: "Yakında",
+    accent: "primary" as const,
   },
   {
     name: "Yazma",
     description: "AI ile detaylı değerlendirme ve geri bildirim",
     emoji: "✏️",
     status: "Yakında",
+    accent: "accent" as const,
   },
 ];
 
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-      <main className="w-full max-w-5xl px-6 py-16 sm:py-24">
-        <header className="mb-12 text-center">
-          <h1 className="mb-4 text-5xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-6xl">
+    <div className="flex flex-1 items-center justify-center px-6 py-16 sm:py-24">
+      <div className="w-full max-w-5xl">
+        <motion.header
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className="mb-16 text-center"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.6, ease: "easeOut" }}
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-muted-foreground backdrop-blur"
+          >
+            <span className="size-1.5 rounded-full bg-accent shadow-[0_0_8px_currentColor]" />
+            B2 → C1 yolculuğun başlasın
+          </motion.div>
+
+          <h1 className="aurora-text mb-6 text-6xl font-bold tracking-tight sm:text-7xl md:text-8xl">
             Lexora
           </h1>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400 sm:text-xl">
-            B2 → C1 İngilizce öğrenme platformu
-          </p>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-500">
-            Cambridge ve IELTS müfredatına dayalı, AI destekli
+          <p className="mx-auto max-w-xl text-lg text-foreground/80 sm:text-xl">
+            Cambridge müfredatına dayalı, <span className="text-accent">AI destekli</span> İngilizce
+            öğrenme platformu.
           </p>
 
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row"
+          >
             <Link href="/signup">
-              <Button size="lg">Ücretsiz başla</Button>
+              <Button
+                size="lg"
+                className="aurora-bg glow-primary h-12 px-8 text-base font-semibold text-white transition-transform hover:scale-105"
+              >
+                Ücretsiz başla →
+              </Button>
             </Link>
             <Link href="/login">
-              <Button size="lg" variant="outline">Giriş yap</Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="glass h-12 px-8 text-base font-medium"
+              >
+                Giriş yap
+              </Button>
             </Link>
-          </div>
-        </header>
+          </motion.div>
+        </motion.header>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {skills.map((skill) => (
-            <div
+          {skills.map((skill, i) => (
+            <motion.div
               key={skill.name}
-              className="rounded-xl border border-zinc-200 bg-white p-6 transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 + i * 0.08, duration: 0.5, ease: "easeOut" }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="glass group relative overflow-hidden rounded-2xl p-6 transition-shadow hover:shadow-2xl"
             >
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-3xl">{skill.emoji}</span>
-                <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+              {/* Decorative gradient blob in corner */}
+              <div
+                className={`pointer-events-none absolute -right-6 -top-6 size-24 rounded-full opacity-20 blur-2xl transition-opacity group-hover:opacity-40 ${
+                  skill.accent === "primary" ? "bg-primary" : "bg-accent"
+                }`}
+              />
+
+              <div className="relative mb-4 flex items-center justify-between">
+                <span className="text-4xl">{skill.emoji}</span>
+                <span
+                  className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                    skill.status === "Aktif"
+                      ? "border-success/30 bg-success/10 text-success"
+                      : "border-white/10 bg-white/5 text-muted-foreground"
+                  }`}
+                >
                   {skill.status}
                 </span>
               </div>
-              <h2 className="mb-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+              <h2 className="relative mb-1.5 text-2xl font-semibold tracking-tight">
                 {skill.name}
               </h2>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="relative text-sm leading-relaxed text-muted-foreground">
                 {skill.description}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
 
-        <footer className="mt-16 text-center text-xs text-zinc-500 dark:text-zinc-500">
-          Lexora · İngilizce öğrenme yolculuğu
-        </footer>
-      </main>
+        <motion.footer
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2, duration: 0.6 }}
+          className="mt-16 text-center text-xs text-muted-foreground/60"
+        >
+          Lexora · İngilizce öğrenme yolculuğun başlıyor ✨
+        </motion.footer>
+      </div>
     </div>
   );
 }
