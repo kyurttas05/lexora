@@ -24,10 +24,16 @@ export default async function DashboardPage() {
   const { data: profile } = await supabase
     .from("user_profiles")
     .select(
-      "display_name, level, target_exam, daily_goal, total_xp, current_streak, longest_streak, hearts, hearts_reset_at",
+      "display_name, level, target_exam, daily_goal, total_xp, current_streak, longest_streak, hearts, hearts_reset_at, onboarding_completed",
     )
     .eq("id", user.id)
     .single();
+
+  // Onboarding tamamlanmadiysa wizard'a gonder
+  // (sutun yoksa undefined olur, redirect olmaz — migration calismadan da bozulmaz)
+  if (profile && profile.onboarding_completed === false) {
+    redirect("/onboarding");
+  }
 
   // Tum public lesson'lari cek (starter deck'ten)
   const { data: lessons } = await supabase
